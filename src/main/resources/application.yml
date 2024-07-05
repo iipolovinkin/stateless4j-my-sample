@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: stateless4j-my-sample
+  codec:
+    max-in-memory-size: 5MB
+
+# for debugging purpose
+#logging:
+#  level:
+#    org.springframework.jdbc.core: TRACE
+#    org.springframework.kafka: DEBUG

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <shutdownHook class="ch.qos.logback.core.hook.DefaultShutdownHook"/>
+
+    <property resource="git.properties"/>
+
+    <property name="APPLICATION_NAME" value="aedo"/>
+    <springProperty scope="context" name="SERVICE_NAME" source="spring.application.name"/>
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <appender name="console-json" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <mdc>
+                    <excludeMdcKeyName>X-B3-SpanId</excludeMdcKeyName>
+                    <excludeMdcKeyName>X-B3-TraceId</excludeMdcKeyName>
+                    <excludeMdcKeyName>X-Span-Export</excludeMdcKeyName>
+                </mdc>
+                <logLevel/>
+                <threadName/>
+                <message/>
+                <logstashMarkers/>
+                <arguments/>
+                <stackTrace>
+                    <fieldName>stackTrace</fieldName>
+                    <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                        <inlineHash>true</inlineHash>
+                        <maxDepthPerThrowable>30</maxDepthPerThrowable>
+                        <exclude>org.springframework.cloud.sleuth.*</exclude>
+                        <exclude>org.springframework.aop.*</exclude>
+                    </throwableConverter>
+                </stackTrace>
+                <pattern>
+                    <pattern>
+                        {
+                        "logger_name": "%logger{30}",
+                        "serviceName": "${SERVICE_NAME}",
+                        "applicationName": "${APPLICATION_NAME}",
+                        "applicationVersion": "${git.build.version}",
+                        "commitId": "${git.commit.id.abbrev}"
+                        }
+                    </pattern>
+                </pattern>
+                <tags/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <springProfile name="!logback-json">
+        <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <springProfile name="logback-json">
+        <logger name="ru.alfacapital.aedo.common.http.HttpServiceLogger" level="TRACE" />
+        <appender name="stdout" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="console-json"/>
+        </appender>
+    </springProfile>
+
+    <root level="INFO">
+        <appender-ref ref="stdout"/>
+    </root>
+
+</configuration>
